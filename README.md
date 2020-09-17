@@ -17,6 +17,7 @@ get some more stuff from you guys!
 ## Table of contents ##
 
 - [Patches](#user-content-patches)
+   - [i3 _surface_ `focus`-ing mode](#user-content-i3-surface-focusing-mode)
    - [Title of the focused window](#user-content-title-of-the-focused-window)
    - [Icons in i3bar](#user-content-icons-in-i3bar)
    - [Higher optimisation level](#user-content-higher-optimisation-level)
@@ -46,6 +47,103 @@ get some more stuff from you guys!
 - [Scratchpad manager](#scratchpad-manager)
 
 ## Patches ##
+
+### i3 _surface_ `focus`ing mode ###
+
+
+*Synopsis—* This patch, in the file `i3-surface-focus-mode.patch`, is a
+simple solution to solve `i3`'s vertical and horizontal focusing swamps
+problem.  Tested and works great with `x11-wm/i3-4.18.2`.
+
+#### Usage
+
+```
+bindsym KEYS focus DIRECTION surface
+```
+
+Where:
+- `KEYS` is any upstream key binding as per `i3`'s `bindsym` syntax.
+- `DIRECTION` is any upstream direction.
+
+
+#### `i3` has swamps?
+
+Without this patch, `i3` has a major usability problem, by which moving
+around with the focus command will _also_ shuffle your tabs or stacks.  For
+example, stacks are vertical, and when you want to move the focus upwards
+and fall in a stack, you will get stuck there (I call it a _vertical
+swamp_), and keep moving up/down in the vertical direction really slowly as
+you shuffle the stacks.
+
+`i3`'s official solution to this annoying _vertical swamp_ problem is to
+put `i3` is to do `mod+a` for selection all elements in the stack swamp, so
+that you jump there.  But this approach is not `O(1)` as it requires the
+user to be aware of swamps ahead of him as he navigates across tabs.
+Realistically, we often discover that we are stuck in a vertical swamp only
+after we've fell into it and wasted a few `mod+direction` key hits already,
+only then we put `i3` in manual 4L gear (i.e. `mod+a`) then do another
+`mod+direction` to finally get out the swamp!
+
+A similar problem happens with tabs, except that tabs are _horizontal
+swamps_.  This is an identical problem to the horizontal swamps above,
+except for having a vertical polarity.
+
+Therefore, a neat solution is to introduce the `surface` focusing mode
+(which this patch does).  This way, we can navigate around with `focus
+DIRECTION surface` as we want, without causing any stacks or tabs to
+re-shuffle.  This way, you won't _need_ to keep scouting ahead of your
+steps to watch out for vertical/horizontal swamps, nor need to put `i3` in
+manual 4L gear (`mod+a`)!
+
+Finally, in order to shuffle the stacks or tabs, you can simply use the
+`sibling` focusing mode (which is already in upstream).
+
+a neat side effect of this is that stacks and tabs can now be treated just
+like tabs, except that stacks are tabs that are visually looking different
+than tabs.
+
+#### Example config
+
+Here is how my i3 uses the `focus` mode.  Of course you can use other
+bindings, this is just how I like to use it:
+
+```
+bindsym $mod+h focus left surface
+bindsym $mod+j focus down surface
+bindsym $mod+k focus up surface
+bindsym $mod+l focus right surface
+bindsym $mod+Mod1+h focus left
+bindsym $mod+Mod1+j focus down
+bindsym $mod+Mod1+k focus up
+bindsym $mod+Mod1+l focus right
+bindsym $mod+p focus prev sibling
+bindsym $mod+n focus next sibling
+```
+As you see above, I personally like it this way:
+
+- `mod+DIRECTION` to be in `focus` mode, so that I move around _freely_
+  without any fear of any swamps as I gloriously hover over them like
+  magic!
+- `mod+p` and `mod+n` to shuffle previous/next in `sibling` mode (already
+  in upstream i3).
+- `mod+Mod1+DIRECTION` to move around in manual L4 gear, for surgical
+  situations, which also shuffles stacks/tabs (which is the default option
+  in upstream `i3` yuck!).
+
+
+#### Appendix
+
+- Historical description about the stack/tab swamp problem:
+  https://github.com/i3/i3/issues/3738
+- Historical reference about the original PR in `i3` (and the drama queen
+  `i3` maintainers): https://github.com/i3/i3/pull/3859
+- An `i3` maintainer actually [liked this `focus` idea a
+  lot](https://github.com/i3/i3/issues/3738#issuecomment-550185288) (in his
+  own words), and also [approved the simplicity of the
+  patch](https://github.com/i3/i3/pull/3859#issuecomment-593023090).
+  Could've easily ended up in upstream `i3`.  But they rejected it simply
+  because they are unprofessional drama who don't like me any more.
+
 
 ### Title of the focused window ###
 
